@@ -4,7 +4,9 @@ import android.app.Application;
 import android.os.StrictMode;
 import android.text.TextUtils;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.log.Logger;
 import com.mapbox.mapboxsdk.maps.Telemetry;
+import com.mapbox.mapboxsdk.testapp.utils.TimberLogger;
 import com.mapbox.mapboxsdk.testapp.utils.TokenUtils;
 import com.squareup.leakcanary.LeakCanary;
 import timber.log.Timber;
@@ -39,7 +41,7 @@ public class MapboxApplication extends Application {
   private boolean initializeLeakCanary() {
     if (LeakCanary.isInAnalyzerProcess(this)) {
       // This process is dedicated to LeakCanary for heap analysis.
-      // You should not init your app in this process.
+      // You should not init your app in this process.male
       return false;
     }
     LeakCanary.install(this);
@@ -47,6 +49,7 @@ public class MapboxApplication extends Application {
   }
 
   private void initializeLogger() {
+    Logger.setLoggerDefinition(new TimberLogger());
     if (BuildConfig.DEBUG) {
       Timber.plant(new DebugTree());
     }
@@ -70,7 +73,10 @@ public class MapboxApplication extends Application {
     String accessToken = TokenUtils.getMapboxAccessToken(getApplicationContext());
     validateAccessToken(accessToken);
     Mapbox.getInstance(getApplicationContext(), accessToken);
-    Telemetry.updateDebugLoggingEnabled(true);
+    Telemetry telemetry = Mapbox.getTelemetry();
+    if (telemetry != null) {
+      telemetry.setDebugLoggingEnabled(true);
+    }
   }
 
   private static void validateAccessToken(String accessToken) {
