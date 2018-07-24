@@ -1,17 +1,19 @@
 #pragma once
 
-#include <typeinfo>
+#include <mbgl/util/typeid.hpp>
+
 #include <type_traits>
 #include <stdexcept>
 namespace mbgl {
 namespace util {
 
-class bad_any_cast : public std::bad_cast {
+class bad_any_cast : public std::exception {
 public:
     const char* what() const noexcept override {
         return "bad any_cast<>()";
     }
 };
+
 /**
  * A variant of `std::any` for non-copyable types.
  *
@@ -100,8 +102,8 @@ public:
         }
     }
 
-    const std::type_info& type() const  {
-      return !has_value()? typeid(void) : vtable->type();
+    uint32_t type() const  {
+      return !has_value()? TypeID::getID<void>() : vtable->type();
     }
 
     bool has_value() const  {
@@ -129,7 +131,7 @@ private:
         virtual ~VTable() = default;
         virtual void move(Storage&& src, Storage& dest) = 0;
         virtual void destroy(Storage&) = 0;
-        virtual const std::type_info& type() = 0;
+        virtual uint32_t type() = 0;
     };
   
     template <typename ValueType>
@@ -143,8 +145,8 @@ private:
             delete reinterpret_cast<ValueType*>(s.dynamic);
         }
 
-        const std::type_info& type() override {
-            return typeid(ValueType);
+        uint32_t type() override {
+            return TypeID::getID<ValueType>();
         }
     };
 
@@ -159,8 +161,8 @@ private:
             reinterpret_cast<ValueType&>(s.stack).~ValueType();
         }
 
-        const std::type_info& type() override {
-            return typeid(ValueType);
+        uint32_t type() override {
+            return TypeID::getID<ValueType>();
         }
     };
 
@@ -217,7 +219,7 @@ inline const ValueType* any_cast(const unique_any* any)
 template<typename ValueType>
 inline ValueType* any_cast(unique_any* any)
 {
-    if(any == nullptr || any->type() != typeid(ValueType))
+    if(any == nullptr || any->type() != TypeID::getID<ValueType>())
         return nullptr;
     else
         return any->cast<ValueType>();

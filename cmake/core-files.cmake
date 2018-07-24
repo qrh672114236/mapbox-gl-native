@@ -690,6 +690,7 @@ set(MBGL_CORE_FILES
     include/mbgl/util/traits.hpp
     include/mbgl/util/tuple.hpp
     include/mbgl/util/type_list.hpp
+    include/mbgl/util/typeid.hpp
     include/mbgl/util/unique_any.hpp
     include/mbgl/util/unitbezier.hpp
     include/mbgl/util/util.hpp
